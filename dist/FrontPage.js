@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const cheerio = require("cheerio");
 const request = require("request");
 const PORTAL_URL = process.env.PORTAL_URL;
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 const FEED_POST_SELECTOR = process.env.FEED_POST_SELECTOR || '.td-big-grid-post, .td_module_wrap';
 const FEED_TITLE_SELECTOR = process.env.FEED_TITLE_SELECTOR || '.entry-title';
 const FEED_LINK_SELECTOR = process.env.FEED_LINK_SELECTOR || '[rel="bookmark"]';
@@ -10,7 +11,9 @@ const FEED_LEAD_SELECTOR = process.env.FEED_LEAD_SELECTOR || '.td-excerpt';
 const SECTIONS_SELECTOR = process.env.FEED_LEAD_SELECTOR || '#menu-glavni-1 > li';
 const SUBSECTIONS_SELECTOR = process.env.SUBSECTIONS_SELECTOR || '.sub-menu > li';
 class PortalScraper {
-    constructor() {
+    constructor(portalUrl) {
+        this.portalUrl = portalUrl;
+        this.baseUrl = BASE_URL;
         this.feedPostSelector = FEED_POST_SELECTOR;
         this.feedTitleSelector = FEED_TITLE_SELECTOR;
         this.feedLinkSelector = FEED_LINK_SELECTOR;
@@ -28,7 +31,8 @@ class PortalScraper {
     }
     getSection($section) {
         let sectionObj = {
-            'url': $section.find('a').attr('href'),
+            'internal_url': $section.find('a').attr('href').replace(this.portalUrl, `${this.baseUrl}/section`),
+            'original_url': $section.find('a').attr('href'),
             'name': $section.find('a').first().text(),
         };
         return sectionObj;
@@ -80,8 +84,8 @@ class PortalScraper {
         return posts;
     }
 }
+const portalScraper = new PortalScraper(PORTAL_URL);
 const frontPage = (req, res) => {
-    const portalScraper = new PortalScraper();
     request.get(PORTAL_URL, (error, response, body) => {
         let feed = portalScraper.getFeed(body);
         let respData = {

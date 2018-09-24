@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio'
 import * as request from 'request'
 
 const PORTAL_URL = process.env.PORTAL_URL
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
 const FEED_POST_SELECTOR = process.env.FEED_POST_SELECTOR || '.td-big-grid-post, .td_module_wrap'
 const FEED_TITLE_SELECTOR = process.env.FEED_TITLE_SELECTOR || '.entry-title'
 const FEED_LINK_SELECTOR = process.env.FEED_LINK_SELECTOR || '[rel="bookmark"]'
@@ -24,8 +25,9 @@ interface Post {
 }
 
 interface Section {
-    name?: string
-    url?: string,
+    name: string
+    internal_url: string
+    original_url: string
     subsections?: Section[]
 }
 
@@ -41,8 +43,12 @@ class PortalScraper {
     feedLeadSelector: string
     sectionsSelector: string
     subsectionsSelector: string
+    baseUrl: string
+    portalUrl: string
 
-    constructor () {
+    constructor (portalUrl: string) {
+        this.portalUrl = portalUrl
+        this.baseUrl = BASE_URL
         this.feedPostSelector = FEED_POST_SELECTOR
         this.feedTitleSelector = FEED_TITLE_SELECTOR
         this.feedLinkSelector = FEED_LINK_SELECTOR
@@ -64,7 +70,8 @@ class PortalScraper {
 
     getSection($section) {
         let sectionObj: Section = {
-            'url': $section.find('a').attr('href'),
+            'internal_url': $section.find('a').attr('href').replace(this.portalUrl, `${this.baseUrl}/section`),
+            'original_url': $section.find('a').attr('href'),
             'name': $section.find('a').first().text(),
         }
 
@@ -133,14 +140,13 @@ class PortalScraper {
     }
 }
 
+const portalScraper = new PortalScraper(PORTAL_URL) 
 
 const frontPage = (req, res) => {
     interface Response {
         count: Number
         data: Feed
     }
-
-    const portalScraper = new PortalScraper() 
 
     request.get(PORTAL_URL, (error, response, body) => {
         let feed = portalScraper.getFeed(body)
