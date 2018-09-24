@@ -33,21 +33,25 @@ class PortalScraper {
         };
         return sectionObj;
     }
+    getSubsections($body, $section) {
+        let subsections = $section.find(this.subsectionsSelector);
+        let subectionsArray = [];
+        if (subsections.length > 0) {
+            subsections.each((index, subsection) => {
+                let $subsection = $body(subsection);
+                let subsectionObj = this.getSection($subsection);
+                subectionsArray.push(subsectionObj);
+            });
+        }
+        return subectionsArray;
+    }
     getSections($body) {
         const $sections = $body(this.sectionsSelector);
         let sections = [];
         $sections.each((index, section) => {
             let $section = $body(section);
             let sectionObj = this.getSection($section);
-            let subsections = $section.find(this.subsectionsSelector);
-            if (subsections.length > 0) {
-                sectionObj['subsections'] = [];
-                subsections.each((index, subsection) => {
-                    let $subsection = $body(subsection);
-                    let subsectionObj = this.getSection($subsection);
-                    sectionObj['subsections'].push(subsectionObj);
-                });
-            }
+            sectionObj['subsections'] = this.getSubsections($body, $section);
             sections.push(sectionObj);
         });
         return sections;
