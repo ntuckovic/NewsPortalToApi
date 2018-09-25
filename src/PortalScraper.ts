@@ -1,7 +1,5 @@
 import * as cheerio from 'cheerio'
-import * as request from 'request'
 
-const PORTAL_URL = process.env.PORTAL_URL
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
 const FEED_POST_SELECTOR = process.env.FEED_POST_SELECTOR || '.td-big-grid-post, .td_module_wrap'
 const FEED_TITLE_SELECTOR = process.env.FEED_TITLE_SELECTOR || '.entry-title'
@@ -31,11 +29,6 @@ interface Section {
     subsections?: Section[]
 }
 
-interface Feed {
-    sections: Section[]
-    posts: Post[]
-}
-
 class PortalScraper {
     feedPostSelector: string
     feedTitleSelector: string
@@ -55,17 +48,6 @@ class PortalScraper {
         this.feedLeadSelector = FEED_LEAD_SELECTOR
         this.sectionsSelector = SECTIONS_SELECTOR
         this.subsectionsSelector = SUBSECTIONS_SELECTOR
-    }
-
-    getFeed (body: string) {
-        const $body = cheerio.load(body)
-
-        let feed: Feed = {
-            'sections': this.getSections($body),
-            'posts': this.getPosts($body)
-        }
-
-        return feed
     }
 
     getSection($section) {
@@ -94,7 +76,8 @@ class PortalScraper {
         return subectionsArray
     }
 
-    getSections ($body) {
+    getSections (body: string) {
+        const $body = cheerio.load(body)
         const $sections = $body(this.sectionsSelector)
         let sections = []
 
@@ -110,7 +93,8 @@ class PortalScraper {
         return sections
     }
 
-    getPosts ($body) {
+    getPosts (body: string) {
+        const $body = cheerio.load(body)
         const $posts = $body(this.feedPostSelector)
         let posts = []
 
@@ -140,24 +124,4 @@ class PortalScraper {
     }
 }
 
-const portalScraper = new PortalScraper(PORTAL_URL) 
-
-const frontPage = (req, res) => {
-    interface Response {
-        count: Number
-        data: Feed
-    }
-
-    request.get(PORTAL_URL, (error, response, body) => {
-        let feed = portalScraper.getFeed(body)
-
-        let respData: Response = {
-            'count': feed.posts.length,
-            'data': feed
-        }
-
-        res.json(respData)
-    })
-}
-
-export default frontPage;
+export default PortalScraper

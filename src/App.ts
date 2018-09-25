@@ -1,6 +1,6 @@
 import * as express from 'express'
 
-import frontPage from './FrontPage'
+import { sections, frontPage, sectionPage } from './Api'
 
 class App {
   public express
@@ -13,7 +13,9 @@ class App {
   private mountRoutes (): void {
     const router = express.Router()
     
-    router.get('/frontpage', frontPage)
+    router.get('/sections', sections)
+    router.get('/frontpage', sectionPage)
+    router.get('/section/:section(([^\/-]+[\/-]+[^\/-]+|[a-zA-z0-9]+))', sectionPage)
     
     this.express.use('/', router)
   }
