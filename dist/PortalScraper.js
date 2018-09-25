@@ -6,6 +6,7 @@ const FEED_POST_SELECTOR = process.env.FEED_POST_SELECTOR || '.td-big-grid-post,
 const FEED_TITLE_SELECTOR = process.env.FEED_TITLE_SELECTOR || '.entry-title';
 const FEED_LINK_SELECTOR = process.env.FEED_LINK_SELECTOR || '[rel="bookmark"]';
 const FEED_LEAD_SELECTOR = process.env.FEED_LEAD_SELECTOR || '.td-excerpt';
+const POST_TITLE_SELECTOR = process.env.FEED_TITLE_SELECTOR || '.entry-title';
 const SECTIONS_SELECTOR = process.env.FEED_LEAD_SELECTOR || '#menu-glavni-1 > li';
 const SUBSECTIONS_SELECTOR = process.env.SUBSECTIONS_SELECTOR || '.sub-menu > li';
 class PortalScraper {
@@ -18,10 +19,14 @@ class PortalScraper {
         this.feedLeadSelector = FEED_LEAD_SELECTOR;
         this.sectionsSelector = SECTIONS_SELECTOR;
         this.subsectionsSelector = SUBSECTIONS_SELECTOR;
+        this.postTitleSelector = POST_TITLE_SELECTOR;
+    }
+    getInternalUrl(originalUrl, replacamentPath) {
+        return originalUrl.replace(this.portalUrl, replacamentPath);
     }
     getSection($section) {
         let sectionObj = {
-            'internal_url': $section.find('a').attr('href').replace(this.portalUrl, `${this.baseUrl}/section`),
+            'internal_url': this.getInternalUrl($section.find('a').attr('href'), `${this.baseUrl}/section`),
             'original_url': $section.find('a').attr('href'),
             'name': $section.find('a').first().text(),
         };
@@ -62,7 +67,8 @@ class PortalScraper {
             let $link = $body(post).find(this.feedLinkSelector);
             let $lead = $body(post).find(this.feedLeadSelector);
             postObj['title'] = $title.text();
-            postObj['url'] = $link.attr('href');
+            postObj['internal_url'] = this.getInternalUrl($link.attr('href'), `${this.baseUrl}/post`),
+                postObj['ortginal_url'] = $link.attr('href');
             postObj['lead'] = $lead.text();
             if ($img.length > 0) {
                 postObj['image'] = {
@@ -74,6 +80,14 @@ class PortalScraper {
             posts.push(postObj);
         });
         return posts;
+    }
+    getPostDetail(body) {
+        const $body = cheerio.load(body);
+        const $title = $body(this.postTitleSelector);
+        let postDetailObj = {
+            'title': $title.text()
+        };
+        return postDetailObj;
     }
 }
 exports.default = PortalScraper;
