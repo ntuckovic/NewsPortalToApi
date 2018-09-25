@@ -14,13 +14,23 @@ exports.sections = (req, res) => {
         res.json(respData);
     });
 };
-exports.sectionPage = (req, res) => {
-    const sectionPath = req.params.section || '';
-    request.get(`${PORTAL_URL}/${sectionPath}`, (error, response, body) => {
+exports.feed = (req, res) => {
+    const feedPath = req.params.feed || '';
+    request.get(`${PORTAL_URL}/${feedPath}`, (error, response, body) => {
         let feed = portalScraper.getPosts(body);
         let respData = {
             'count': feed.length,
             'data': feed
+        };
+        res.json(respData);
+    });
+};
+exports.post = (req, res) => {
+    const postPath = req.params.post;
+    request.get(`${PORTAL_URL}/${postPath}`, (error, response, body) => {
+        let postDetail = portalScraper.getPostDetail(body);
+        let respData = {
+            'data': postDetail
         };
         res.json(respData);
     });

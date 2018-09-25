@@ -1,6 +1,6 @@
 import * as express from 'express'
 
-import { sections, frontPage, sectionPage } from './Api'
+import { sections, feed, post } from './Api'
 
 class App {
   public express
@@ -14,8 +14,9 @@ class App {
     const router = express.Router()
     
     router.get('/sections', sections)
-    router.get('/frontpage', sectionPage)
-    router.get('/section/:section(([^\/-]+[\/-]+[^\/-]+|[a-zA-z0-9]+))', sectionPage)
+    router.get('/frontpage', feed)
+    router.get('/feed/:feed(([^\/-]+[\/-]+[^\/-]+|[a-zA-z0-9]+))', feed)
+    router.get('/post/:post', post)
     
     this.express.use('/', router)
   }

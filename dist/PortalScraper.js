@@ -6,7 +6,7 @@ const FEED_POST_SELECTOR = process.env.FEED_POST_SELECTOR || '.td-big-grid-post,
 const FEED_TITLE_SELECTOR = process.env.FEED_TITLE_SELECTOR || '.entry-title';
 const FEED_LINK_SELECTOR = process.env.FEED_LINK_SELECTOR || '[rel="bookmark"]';
 const FEED_LEAD_SELECTOR = process.env.FEED_LEAD_SELECTOR || '.td-excerpt';
-const POST_TITLE_SELECTOR = process.env.FEED_TITLE_SELECTOR || '.entry-title';
+const POST_TITLE_SELECTOR = process.env.FEED_TITLE_SELECTOR || 'h1.entry-title';
 const SECTIONS_SELECTOR = process.env.FEED_LEAD_SELECTOR || '#menu-glavni-1 > li';
 const SUBSECTIONS_SELECTOR = process.env.SUBSECTIONS_SELECTOR || '.sub-menu > li';
 class PortalScraper {
