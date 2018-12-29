@@ -6,20 +6,24 @@ const FEED_POST_SELECTOR = process.env.FEED_POST_SELECTOR || '.td-big-grid-post,
 const FEED_TITLE_SELECTOR = process.env.FEED_TITLE_SELECTOR || '.entry-title';
 const FEED_LINK_SELECTOR = process.env.FEED_LINK_SELECTOR || '[rel="bookmark"]';
 const FEED_LEAD_SELECTOR = process.env.FEED_LEAD_SELECTOR || '.td-excerpt';
-const POST_TITLE_SELECTOR = process.env.FEED_TITLE_SELECTOR || 'h1.entry-title';
-const SECTIONS_SELECTOR = process.env.FEED_LEAD_SELECTOR || '#menu-glavni-1 > li';
+const FEED_LABEL_SELECTOR = process.env.FEED_LABEL_SELECTOR || '[class^="nadnaslov"]';
+const POST_TITLE_SELECTOR = process.env.POST_TITLE_SELECTOR || 'h1.entry-title';
+const POST_LEAD_SELECTOR = process.env.POST_LEAD_SELECTOR || '.td-post-sub-title';
+const SECTIONS_SELECTOR = process.env.SECTIONS_SELECTOR || '#menu-glavni-1 > li';
 const SUBSECTIONS_SELECTOR = process.env.SUBSECTIONS_SELECTOR || '.sub-menu > li';
 class PortalScraper {
     constructor(portalUrl) {
-        this.portalUrl = portalUrl;
-        this.baseUrl = BASE_URL;
         this.feedPostSelector = FEED_POST_SELECTOR;
         this.feedTitleSelector = FEED_TITLE_SELECTOR;
         this.feedLinkSelector = FEED_LINK_SELECTOR;
         this.feedLeadSelector = FEED_LEAD_SELECTOR;
+        this.feedLabelSelector = FEED_LABEL_SELECTOR;
         this.sectionsSelector = SECTIONS_SELECTOR;
         this.subsectionsSelector = SUBSECTIONS_SELECTOR;
         this.postTitleSelector = POST_TITLE_SELECTOR;
+        this.postLeadSelector = POST_LEAD_SELECTOR;
+        this.baseUrl = BASE_URL;
+        this.portalUrl = portalUrl;
     }
     getInternalUrl(originalUrl, replacamentPath) {
         return originalUrl.replace(this.portalUrl, replacamentPath);
@@ -66,10 +70,12 @@ class PortalScraper {
             let $title = $body(post).find(this.feedTitleSelector);
             let $link = $body(post).find(this.feedLinkSelector);
             let $lead = $body(post).find(this.feedLeadSelector);
+            let $label = $body(post).find(this.feedLabelSelector);
             postObj['title'] = $title.text();
-            postObj['internal_url'] = this.getInternalUrl($link.attr('href'), `${this.baseUrl}/post`),
-                postObj['ortginal_url'] = $link.attr('href');
+            postObj['internal_url'] = this.getInternalUrl($link.attr('href'), `${this.baseUrl}/post`);
+            postObj['original_url'] = $link.attr('href');
             postObj['lead'] = $lead.text();
+            postObj['label'] = $label.text();
             if ($img.length > 0) {
                 postObj['image'] = {
                     'src': $img.attr('src'),
@@ -84,8 +90,10 @@ class PortalScraper {
     getPostDetail(body) {
         const $body = cheerio.load(body);
         const $title = $body(this.postTitleSelector);
+        const $lead = $body(this.postLeadSelector);
         let postDetailObj = {
-            'title': $title.text()
+            'title': $title.text(),
+            'lead': $lead.text()
         };
         return postDetailObj;
     }

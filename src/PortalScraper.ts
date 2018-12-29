@@ -5,10 +5,12 @@ const FEED_POST_SELECTOR = process.env.FEED_POST_SELECTOR || '.td-big-grid-post,
 const FEED_TITLE_SELECTOR = process.env.FEED_TITLE_SELECTOR || '.entry-title'
 const FEED_LINK_SELECTOR = process.env.FEED_LINK_SELECTOR || '[rel="bookmark"]'
 const FEED_LEAD_SELECTOR = process.env.FEED_LEAD_SELECTOR || '.td-excerpt'
-const POST_TITLE_SELECTOR = process.env.FEED_TITLE_SELECTOR || 'h1.entry-title'
+const FEED_LABEL_SELECTOR = process.env.FEED_LABEL_SELECTOR || '[class^="nadnaslov"]'
+const POST_TITLE_SELECTOR = process.env.POST_TITLE_SELECTOR || 'h1.entry-title'
+const POST_LEAD_SELECTOR = process.env.POST_LEAD_SELECTOR || '.td-post-sub-title'
 
-const SECTIONS_SELECTOR = process.env.FEED_LEAD_SELECTOR || '#menu-glavni-1 > li'
-const SUBSECTIONS_SELECTOR = process.env.SUBSECTIONS_SELECTOR || '.sub-menu > li' 
+const SECTIONS_SELECTOR = process.env.SECTIONS_SELECTOR || '#menu-glavni-1 > li'
+const SUBSECTIONS_SELECTOR = process.env.SUBSECTIONS_SELECTOR || '.sub-menu > li'
 
 interface Image {
     src?: string
@@ -21,8 +23,9 @@ interface Post {
     internal_url?: string
     original_url?: string
     lead?: string
-    image?: Image,
+    image?: Image
     content?: string
+    label?: string
 }
 
 interface Section {
@@ -33,31 +36,25 @@ interface Section {
 }
 
 class PortalScraper {
-    feedPostSelector: string
-    feedTitleSelector: string
-    feedLinkSelector: string
-    feedLeadSelector: string
-    sectionsSelector: string
-    subsectionsSelector: string
-    postTitleSelector: string
-    baseUrl: string
+    feedPostSelector: string = FEED_POST_SELECTOR
+    feedTitleSelector: string = FEED_TITLE_SELECTOR
+    feedLinkSelector: string = FEED_LINK_SELECTOR
+    feedLeadSelector: string = FEED_LEAD_SELECTOR
+    feedLabelSelector: string = FEED_LABEL_SELECTOR
+    sectionsSelector: string = SECTIONS_SELECTOR
+    subsectionsSelector: string = SUBSECTIONS_SELECTOR
+    postTitleSelector: string = POST_TITLE_SELECTOR
+    postLeadSelector: string = POST_LEAD_SELECTOR
+    baseUrl: string = BASE_URL
     portalUrl: string
 
-    constructor (portalUrl: string) {
+    constructor(portalUrl: string) {
         this.portalUrl = portalUrl
-        this.baseUrl = BASE_URL
-        this.feedPostSelector = FEED_POST_SELECTOR
-        this.feedTitleSelector = FEED_TITLE_SELECTOR
-        this.feedLinkSelector = FEED_LINK_SELECTOR
-        this.feedLeadSelector = FEED_LEAD_SELECTOR
-        this.sectionsSelector = SECTIONS_SELECTOR
-        this.subsectionsSelector = SUBSECTIONS_SELECTOR
-        this.postTitleSelector = POST_TITLE_SELECTOR
     }
 
     getInternalUrl(originalUrl: string, replacamentPath: string) {
         return originalUrl.replace(this.portalUrl, replacamentPath)
-    } 
+    }
 
     getSection($section) {
         let sectionObj: Section = {
@@ -85,7 +82,7 @@ class PortalScraper {
         return subectionsArray
     }
 
-    getSections (body: string) {
+    getSections(body: string) {
         const $body = cheerio.load(body)
         const $sections = $body(this.sectionsSelector)
         let sections = []
@@ -102,7 +99,7 @@ class PortalScraper {
         return sections
     }
 
-    getPosts (body: string) {
+    getPosts(body: string) {
         const $body = cheerio.load(body)
         const $posts = $body(this.feedPostSelector)
         let posts = []
@@ -113,11 +110,13 @@ class PortalScraper {
             let $title = $body(post).find(this.feedTitleSelector)
             let $link = $body(post).find(this.feedLinkSelector)
             let $lead = $body(post).find(this.feedLeadSelector)
+            let $label = $body(post).find(this.feedLabelSelector)
 
             postObj['title'] = $title.text()
-            postObj['internal_url'] = this.getInternalUrl($link.attr('href'), `${this.baseUrl}/post`),
-            postObj['ortginal_url'] = $link.attr('href')
+            postObj['internal_url'] = this.getInternalUrl($link.attr('href'), `${this.baseUrl}/post`)
+            postObj['original_url'] = $link.attr('href')
             postObj['lead'] = $lead.text()
+            postObj['label'] = $label.text()
 
             if ($img.length > 0) {
                 postObj['image'] = {
@@ -133,12 +132,14 @@ class PortalScraper {
         return posts
     }
 
-    getPostDetail (body: string) {
+    getPostDetail(body: string) {
         const $body = cheerio.load(body)
         const $title = $body(this.postTitleSelector)
+        const $lead = $body(this.postLeadSelector)
 
         let postDetailObj: Post = {
-            'title': $title.text()
+            'title': $title.text(),
+            'lead': $lead.text()
         }
 
         return postDetailObj
