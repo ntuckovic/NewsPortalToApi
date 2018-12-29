@@ -8,24 +8,29 @@ const FEED_LEAD_SELECTOR = process.env.FEED_LEAD_SELECTOR || '.td-excerpt'
 const FEED_LABEL_SELECTOR = process.env.FEED_LABEL_SELECTOR || '[class^="nadnaslov"]'
 const POST_TITLE_SELECTOR = process.env.POST_TITLE_SELECTOR || 'h1.entry-title'
 const POST_LEAD_SELECTOR = process.env.POST_LEAD_SELECTOR || '.td-post-sub-title'
+const POST_IMAGE_SELECTOR = process.env.POST_IMAGE_SELECTOR || '.td-post-featured-image'
 
 const SECTIONS_SELECTOR = process.env.SECTIONS_SELECTOR || '#menu-glavni-1 > li'
 const SUBSECTIONS_SELECTOR = process.env.SUBSECTIONS_SELECTOR || '.sub-menu > li'
 
 interface Image {
-    src?: string
+    src: string
     title?: string
     alt?: string
+    caption?: string
 }
 
-interface Post {
+interface PostLight {
     title?: string
     internal_url?: string
     original_url?: string
-    lead?: string
     image?: Image
-    content?: string
     label?: string
+    lead?: string
+}
+
+interface Post extends PostLight {
+    content?: any
 }
 
 interface Section {
@@ -45,6 +50,7 @@ class PortalScraper {
     subsectionsSelector: string = SUBSECTIONS_SELECTOR
     postTitleSelector: string = POST_TITLE_SELECTOR
     postLeadSelector: string = POST_LEAD_SELECTOR
+    postImageSelector: string = POST_IMAGE_SELECTOR
     baseUrl: string = BASE_URL
     portalUrl: string
 
@@ -105,7 +111,7 @@ class PortalScraper {
         let posts = []
 
         $posts.each((index, post) => {
-            let postObj: Post = {}
+            let postObj: PostLight = {}
             let $img = $body(post).find('img')
             let $title = $body(post).find(this.feedTitleSelector)
             let $link = $body(post).find(this.feedLinkSelector)
@@ -136,10 +142,31 @@ class PortalScraper {
         const $body = cheerio.load(body)
         const $title = $body(this.postTitleSelector)
         const $lead = $body(this.postLeadSelector)
+        const $img = $body(this.postImageSelector)
+        const $content = $body('.td-post-content')
+
+        $content.find('p, img').each((i, elem) => {
+            if (elem.name == 'p') {
+                console.log(cheerio.load(elem).text());
+            }
+            else if (elem.name == 'img') {
+                console.log(elem.attribs.src);
+            }
+        });
 
         let postDetailObj: Post = {
             'title': $title.text(),
-            'lead': $lead.text()
+            'lead': $lead.text(),
+            'content': $content.text()
+        }
+
+        if ($img.length > 0) {
+            postDetailObj['image'] = {
+                'src': $img.find('img').attr('src'),
+                'title': $img.find('img').attr('title'),
+                'alt': $img.find('img').attr('alt'),
+                'caption': $img.find('.wp-caption-text').text(),
+            }
         }
 
         return postDetailObj

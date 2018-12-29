@@ -9,6 +9,7 @@ const FEED_LEAD_SELECTOR = process.env.FEED_LEAD_SELECTOR || '.td-excerpt';
 const FEED_LABEL_SELECTOR = process.env.FEED_LABEL_SELECTOR || '[class^="nadnaslov"]';
 const POST_TITLE_SELECTOR = process.env.POST_TITLE_SELECTOR || 'h1.entry-title';
 const POST_LEAD_SELECTOR = process.env.POST_LEAD_SELECTOR || '.td-post-sub-title';
+const POST_IMAGE_SELECTOR = process.env.POST_IMAGE_SELECTOR || '.td-post-featured-image';
 const SECTIONS_SELECTOR = process.env.SECTIONS_SELECTOR || '#menu-glavni-1 > li';
 const SUBSECTIONS_SELECTOR = process.env.SUBSECTIONS_SELECTOR || '.sub-menu > li';
 class PortalScraper {
@@ -22,6 +23,7 @@ class PortalScraper {
         this.subsectionsSelector = SUBSECTIONS_SELECTOR;
         this.postTitleSelector = POST_TITLE_SELECTOR;
         this.postLeadSelector = POST_LEAD_SELECTOR;
+        this.postImageSelector = POST_IMAGE_SELECTOR;
         this.baseUrl = BASE_URL;
         this.portalUrl = portalUrl;
     }
@@ -91,10 +93,29 @@ class PortalScraper {
         const $body = cheerio.load(body);
         const $title = $body(this.postTitleSelector);
         const $lead = $body(this.postLeadSelector);
+        const $img = $body(this.postImageSelector);
+        const $content = $body('.td-post-content');
+        $content.find('p, img').each((i, elem) => {
+            if (elem.name == 'p') {
+                console.log(cheerio.load(elem).text());
+            }
+            else if (elem.name == 'img') {
+                console.log(elem.attribs.src);
+            }
+        });
         let postDetailObj = {
             'title': $title.text(),
-            'lead': $lead.text()
+            'lead': $lead.text(),
+            'content': $content.text()
         };
+        if ($img.length > 0) {
+            postDetailObj['image'] = {
+                'src': $img.find('img').attr('src'),
+                'title': $img.find('img').attr('title'),
+                'alt': $img.find('img').attr('alt'),
+                'caption': $img.find('.wp-caption-text').text(),
+            };
+        }
         return postDetailObj;
     }
 }
